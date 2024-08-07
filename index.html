@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>T-1</title>
+
+    <style>
+      body {
+        background-color: #2c74b3;
+      }
+      #threshold {
+        border-color: greenyellow;
+      }
+      .top {
+        display: inline-flex;
+        flex-direction: column;
+        justify-content: stretch;
+        position: relative;
+        left: 1000px;
+        gap: 20px;
+      }
+      .top > * {
+        padding: 10px;
+      }
+      .bottom {
+        text-align: center;
+        position: relative;
+        top: 200px;
+      }
+      table {
+        padding: 4px;
+        border-collapse: collapse;
+      }
+      table, th, td {
+        border: 2px solid black;
+      }
+      .highlight-expense {
+        background-color: #f8d7da;
+      }
+      .highlight-income {
+        background-color: #d4edda;
+      }
+      #totalAmountTable {
+        display: none;
+        margin-top: 20px;
+      }
+    </style>
+</head>
+<body>
+    <div class="top">
+      <input type="text" name="" id="threshold" readonly />
+      <button onclick="showTotalAmount()">Total Amount</button>
+    </div>
+    <div class="bottom">
+      <button onclick="window.location.href='/Users/kvs/Desktop/Hackathon/inc.html'">Add Income</button>
+      <button onclick="window.location.href='/Users/kvs/Desktop/Hackathon/exp.html'">Add Expenditure</button>
+    </div>
+
+    <br><br><br><br><br><br><br><br><br><br>
+
+    <table class="tab t1" id="incomeTable">
+      <tr>
+        <td>Date</td>
+        <td>Short Description</td>
+        <td>Income</td>
+      </tr>
+    </table>
+    <table id="expenseTable">
+        <tr>
+            <td>Date</td>
+            <td>Short Description</td>
+            <td>Expense</td>
+          </tr>
+    </table>
+
+    <table id="totalAmountTable">
+      <tr>
+        <td>Date</td>
+        <td>Short Description</td>
+        <td>Type</td>
+        <td>Amount</td>
+      </tr>
+    </table>
+
+    <script>
+      const THRESHOLD = 400000;
+
+      document.addEventListener('DOMContentLoaded', () => {
+        loadTableData();
+      });
+
+      function loadTableData() {
+        const incomeData = JSON.parse(localStorage.getItem('incomeData')) || [];
+        const expenseData = JSON.parse(localStorage.getItem('expenseData')) || [];
+
+        const incomeTable = document.getElementById('incomeTable');
+        const expenseTable = document.getElementById('expenseTable');
+        const totalAmountTable = document.getElementById('totalAmountTable');
+
+        incomeData.forEach(data => {
+          const row = incomeTable.insertRow();
+          row.insertCell(0).textContent = data.date;
+          row.insertCell(1).textContent = data.description;
+          row.insertCell(2).textContent = data.amount;
+          if (parseFloat(data.amount) > 50000) {
+            row.classList.add('highlight-income');
+          }
+        });
+
+        expenseData.forEach(data => {
+          const row = expenseTable.insertRow();
+          row.insertCell(0).textContent = data.date;
+          row.insertCell(1).textContent = data.description;
+          row.insertCell(2).textContent = data.amount;
+          if (parseFloat(data.amount) > 10000) {
+            row.classList.add('highlight-expense');
+          }
+        });
+
+        sortTableByDate(incomeTable);
+        sortTableByDate(expenseTable);
+        calculateTotalAmount();
+      }
+
+      function sortTableByDate(table) {
+        const rows = Array.from(table.rows).slice(1);
+        rows.sort((a, b) => new Date(a.cells[0].textContent) - new Date(b.cells[0].textContent));
+        rows.forEach(row => table.appendChild(row));
+      }
+
+      function calculateTotalAmount() {
+        const incomeData = JSON.parse(localStorage.getItem('incomeData')) || [];
+        const expenseData = JSON.parse(localStorage.getItem('expenseData')) || [];
+
+        const totalIncome = incomeData.reduce((total, item) => total + parseFloat(item.amount), 0);
+        const totalExpense = expenseData.reduce((total, item) => total + parseFloat(item.amount), 0);
+
+        // document.getElementById('threshold').value = `Total Income: ${totalIncome} | Total Expense: ${totalExpense} | Balance: ${totalIncome - totalExpense}`;
+
+        if (totalIncome > THRESHOLD) {
+          document.getElementById('threshold').style.backgroundColor = 'lightcoral';
+        } else {
+          document.getElementById('threshold').style.backgroundColor = 'lightgreen';
+        }
+      }
+
+      function showTotalAmount() {
+        const totalAmountTable = document.getElementById('totalAmountTable');
+        totalAmountTable.style.display = totalAmountTable.style.display === 'none' ? 'table' : 'none';
+
+        const incomeData = JSON.parse(localStorage.getItem('incomeData')) || [];
+        const expenseData = JSON.parse(localStorage.getItem('expenseData')) || [];
+
+        const table = totalAmountTable;
+      
+        table.innerHTML = `<tr><td>Date</td><td>Short Description</td><td>Type</td><td>Amount</td></tr>`;
+        
+        incomeData.forEach(data => {
+          const row = table.insertRow();
+          row.insertCell(0).textContent = data.date;
+          row.insertCell(1).textContent = data.description;
+          row.insertCell(2).textContent = 'Income';
+          row.insertCell(3).textContent = data.amount;
+        });
+
+        expenseData.forEach(data => {
+          const row = table.insertRow();
+          row.insertCell(0).textContent = data.date;
+          row.insertCell(1).textContent = data.description;
+          row.insertCell(2).textContent = 'Expense';
+          row.insertCell(3).textContent = data.amount;
+        });
+
+        sortTableByDate(table);
+      }
+    </script>
+  </body>
+</html>
+
